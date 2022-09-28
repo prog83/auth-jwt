@@ -1,0 +1,24 @@
+version: '2.1'
+
+services:
+  auth:
+    image: ${IMAGE_TAG}
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      mode: replicated
+      replicas: 2
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-router.entrypoints=websecure"
+      - "traefik.http.routers.auth-router.tls=true"
+      - "traefik.http.routers.auth-router.rule=(Host(`develop.webapi.localhost`) || Host(`webapi.localhost`)) && PathPrefix(`/api/${API_VERSION}`)"
+      - "traefik.http.middlewares.auth-stripprefix.stripprefix.prefixes=/api/${API_VERSION}/,/api/${API_VERSION}"
+      - "traefik.http.middlewares.auth-stripprefix.stripprefix.forceSlash=false"
+      - "traefik.http.routers.auth-router.middlewares=auth-stripprefix"
+
+networks:
+  default:
+    name: net
+    external: true
